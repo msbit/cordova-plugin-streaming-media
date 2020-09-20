@@ -220,19 +220,8 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     // handle gestures
     [self handleGestures];
     
-    CMTime interval = CMTimeMakeWithSeconds(1, NSEC_PER_SEC);
-    dispatch_queue_t mainQueue = dispatch_get_main_queue();
-
-    __weak __typeof__(self) weakSelf = self;
-    __weak __typeof__(callbackId) weakCallbackId = callbackId;
-    timeObserverToken = [movie addPeriodicTimeObserverForInterval:interval queue:mainQueue usingBlock:^(CMTime time) {
-        NSDictionary *message = @{
-            @"progress" : [NSNumber numberWithDouble:CMTimeGetSeconds(time)]
-        };
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
-        [pluginResult setKeepCallbackAsBool:YES];
-        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:weakCallbackId];
-    }];
+    // configure time observer
+    [self configureTimeObserver];
 
     [moviePlayer setPlayer:movie];
     [moviePlayer setShowsPlaybackControls:controls];
@@ -257,6 +246,22 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     
     // setup listners
     [self handleListeners];
+}
+
+- (void) configureTimeObserver {
+    CMTime interval = CMTimeMakeWithSeconds(1, NSEC_PER_SEC);
+    dispatch_queue_t queue = dispatch_get_main_queue();
+
+    __weak __typeof__(self) weakSelf = self;
+    __weak __typeof__(callbackId) weakCallbackId = callbackId;
+    timeObserverToken = [movie addPeriodicTimeObserverForInterval:interval queue:queue usingBlock:^(CMTime time) {
+        NSDictionary *message = @{
+            @"progress" : [NSNumber numberWithDouble:CMTimeGetSeconds(time)]
+        };
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
+        [pluginResult setKeepCallbackAsBool:YES];
+        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:weakCallbackId];
+    }];
 }
 
 - (void) handleListeners {
