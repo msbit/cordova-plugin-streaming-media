@@ -27,6 +27,7 @@
     NSString *videoType;
     AVPlayer *movie;
     BOOL controls;
+    id timeObserverToken;
 }
 
 NSString * const TYPE_VIDEO = @"VIDEO";
@@ -219,6 +220,17 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     // handle gestures
     [self handleGestures];
     
+    CMTime interval = CMTimeMakeWithSeconds(1, NSEC_PER_SEC);
+    dispatch_queue_t mainQueue = dispatch_get_main_queue();
+
+    __weak __typeof__(self) weakSelf = self;
+    __weak __typeof__(callbackId) weakCallbackId = callbackId;
+    timeObserverToken = [movie addPeriodicTimeObserverForInterval:interval queue:mainQueue usingBlock:^(CMTime time) {
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:CMTimeGetSeconds(time)];
+        [pluginResult setKeepCallbackAsBool:YES];
+        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:weakCallbackId];
+    }];
+
     [moviePlayer setPlayer:movie];
     [moviePlayer setShowsPlaybackControls:controls];
     [moviePlayer setUpdatesNowPlayingInfoCenter:YES];
@@ -396,6 +408,10 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
      name:UIDeviceOrientationDidChangeNotification
      object:nil];
     
+    if (movie && timeObserverToken) {
+        [movie removeTimeObserver:timeObserverToken];
+    }
+
     if (moviePlayer) {
         [moviePlayer.player pause];
         [moviePlayer dismissViewControllerAnimated:YES completion:nil];
