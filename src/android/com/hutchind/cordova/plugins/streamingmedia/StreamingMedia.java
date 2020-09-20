@@ -7,6 +7,7 @@ import android.util.Log;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.os.Build;
+import java.util.Collections;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,7 +43,7 @@ public class StreamingMedia extends CordovaPlugin {
 		} else if (ACTION_PLAY_VIDEO.equals(action)) {
 			return playVideo(args.getString(0), options);
 		} else {
-			callbackContext.error("streamingMedia." + action + " is not a supported method.");
+			callbackContext.error(Collections.singletonMap("error", "streamingMedia." + action + " is not a supported method."));
 			return false;
 		}
 	}
@@ -95,13 +96,13 @@ public class StreamingMedia extends CordovaPlugin {
 		super.onActivityResult(requestCode, resultCode, intent);
 		if (ACTIVITY_CODE_PLAY_MEDIA == requestCode) {
 			if (Activity.RESULT_OK == resultCode) {
-				this.callbackContext.success();
+				this.callbackContext.success(Collections.singletonMap("success", true));
 			} else if (Activity.RESULT_CANCELED == resultCode) {
 				String errMsg = "Error";
 				if (intent != null && intent.hasExtra("message")) {
 					errMsg = intent.getStringExtra("message");
 				}
-				this.callbackContext.error(errMsg);
+				this.callbackContext.error(Collections.singletonMap("error", errMsg));
 			}
 		}
 	}
