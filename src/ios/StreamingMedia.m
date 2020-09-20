@@ -418,6 +418,7 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     
     if (movie && timeObserverToken) {
         [movie removeTimeObserver:timeObserverToken];
+        timeObserverToken = nil;
     }
 
     if (moviePlayer) {
