@@ -226,7 +226,10 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     __weak __typeof__(self) weakSelf = self;
     __weak __typeof__(callbackId) weakCallbackId = callbackId;
     timeObserverToken = [movie addPeriodicTimeObserverForInterval:interval queue:mainQueue usingBlock:^(CMTime time) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:CMTimeGetSeconds(time)];
+        NSDictionary *message = @{
+            @"progress" : [NSNumber numberWithDouble:CMTimeGetSeconds(time)]
+        };
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
         [pluginResult setKeepCallbackAsBool:YES];
         [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:weakCallbackId];
     }];
@@ -376,11 +379,16 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     if (shouldAutoClose || [errorMsg length] != 0) {
         [self cleanup];
         CDVPluginResult* pluginResult;
+        NSDictionary *message;
+        CDVCommandStatus status;
         if ([errorMsg length] != 0) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMsg];
+            message = @{@"error" : errorMsg};
+            status = CDVCommandStatus_ERROR;
         } else {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:true];
+            message = @{@"success" : @true};
+            status = CDVCommandStatus_OK;
         }
+        pluginResult = [CDVPluginResult resultWithStatus:status messageAsDictionary:message];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
     }
 }
