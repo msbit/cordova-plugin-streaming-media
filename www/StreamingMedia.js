@@ -27,6 +27,11 @@ StreamingMedia.prototype.playVideo = function (url, options) {
 	cordova.exec(options.successCallback || null, options.errorCallback || null, "StreamingMedia", "playVideo", [url, options]);
 };
 
+StreamingMedia.prototype.registerForProgress = function (options) {
+	options = options || {};
+	cordova.exec(options.callback || null, null, "StreamingMedia", "registerForProgress", [options]);
+};
+
 
 StreamingMedia.install = function () {
 	if (!window.plugins) {

@@ -19,6 +19,7 @@ import org.apache.cordova.PluginResult;
 public class StreamingMedia extends CordovaPlugin {
 	public static final String ACTION_PLAY_AUDIO = "playAudio";
 	public static final String ACTION_PLAY_VIDEO = "playVideo";
+	public static final String ACTION_REGISTER_FOR_PROGRESS = "registerForProgress";
 
 	private static final int ACTIVITY_CODE_PLAY_MEDIA = 7;
 
@@ -41,6 +42,8 @@ public class StreamingMedia extends CordovaPlugin {
 			return playAudio(args.getString(0), options);
 		} else if (ACTION_PLAY_VIDEO.equals(action)) {
 			return playVideo(args.getString(0), options);
+		} else if (ACTION_REGISTER_FOR_PROGRESS.equals(action)) {
+			return registerForProgress(options);
 		} else {
 			callbackContext.error("streamingMedia." + action + " is not a supported method.");
 			return false;
@@ -52,6 +55,10 @@ public class StreamingMedia extends CordovaPlugin {
 	}
 	private boolean playVideo(String url, JSONObject options) {
 		return play(SimpleVideoStream.class, url, options);
+	}
+
+	private boolean registerForProgress(JSONObject options) {
+		return true;
 	}
 
 	private boolean play(final Class activityClass, final String url, final JSONObject options) {

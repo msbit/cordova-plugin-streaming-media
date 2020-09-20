@@ -115,6 +115,10 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     [self play:command type:[NSString stringWithString:TYPE_AUDIO]];
 }
 
+-(void)registerForProgress:(CDVInvokedUrlCommand *) command {
+    NSLog(@"registerForProgress called");
+}
+
 -(void)stopAudio:(CDVInvokedUrlCommand *) command {
     [self stop:command type:[NSString stringWithString:TYPE_AUDIO]];
 }
