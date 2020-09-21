@@ -27,6 +27,8 @@
     NSString *videoType;
     AVPlayer *movie;
     BOOL controls;
+    id timeObserverToken;
+    NSString *progressCallbackId;
 }
 
 NSString * const TYPE_VIDEO = @"VIDEO";
@@ -117,6 +119,8 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
 
 -(void)registerForProgress:(CDVInvokedUrlCommand *) command {
     NSLog(@"registerForProgress called");
+
+    progressCallbackId = command.callbackId;
 }
 
 -(void)stopAudio:(CDVInvokedUrlCommand *) command {
@@ -222,6 +226,9 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     
     // handle gestures
     [self handleGestures];
+
+    // configure time observer
+    [self configureTimeObserver];
     
     [moviePlayer setPlayer:movie];
     [moviePlayer setShowsPlaybackControls:controls];
@@ -246,6 +253,25 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     
     // setup listners
     [self handleListeners];
+}
+
+- (void) configureTimeObserver {
+    __weak __typeof__(self) weakSelf = self;
+    timeObserverToken = [movie addPeriodicTimeObserverForInterval:CMTimeMakeWithSeconds(1, NSEC_PER_SEC)
+                                                            queue:dispatch_get_main_queue()
+                                                       usingBlock:^(CMTime time) {
+        __typeof__(self) strongSelf = weakSelf;
+
+        if (!strongSelf->progressCallbackId) {
+            return;
+        }
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                          messageAsDouble:CMTimeGetSeconds(time)];
+        [pluginResult setKeepCallbackAsBool:YES];
+        [strongSelf.commandDelegate sendPluginResult:pluginResult
+                                          callbackId:strongSelf->progressCallbackId];
+    }];
 }
 
 - (void) handleListeners {
@@ -367,6 +393,11 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
     
     if (shouldAutoClose || [errorMsg length] != 0) {
         [self cleanup];
+
+        if (progressCallbackId) {
+            progressCallbackId = nil;
+        }
+
         CDVPluginResult* pluginResult;
         if ([errorMsg length] != 0) {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMsg];
@@ -400,6 +431,11 @@ NSString * const DEFAULT_IMAGE_SCALE = @"center";
      name:UIDeviceOrientationDidChangeNotification
      object:nil];
     
+    if (movie && timeObserverToken) {
+        [movie removeTimeObserver:timeObserverToken];
+        timeObserverToken = nil;
+    }
+
     if (moviePlayer) {
         [moviePlayer.player pause];
         [moviePlayer dismissViewControllerAnimated:YES completion:nil];
